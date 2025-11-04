@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import UrlInput from './components/UrlInput';
 import Quiz from './components/Quiz';
-import { dummyQuizData } from './data/dummyQuiz';
 
 export default function App() {
   const [quizGenerated, setQuizGenerated] = useState(false);
   const [currentUrl, setCurrentUrl] = useState('');
+  const [quizData, setQuizData] = useState(null);
 
-  const handleGenerateQuiz = (url) => {
+  const handleGenerateQuiz = (data, url) => {
+    setQuizData(data);
     setCurrentUrl(url);
     setQuizGenerated(true);
   };
@@ -15,6 +16,7 @@ export default function App() {
   const handleReset = () => {
     setQuizGenerated(false);
     setCurrentUrl('');
+    setQuizData(null);
   };
 
   return (
@@ -45,7 +47,7 @@ export default function App() {
           {!quizGenerated ? (
             <UrlInput onGenerateQuiz={handleGenerateQuiz} />
           ) : (
-            <Quiz quizData={dummyQuizData} onReset={handleReset} />
+            quizData && <Quiz quizData={quizData} onReset={handleReset} />
           )}
         </main>
 

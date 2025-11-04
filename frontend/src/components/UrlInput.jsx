@@ -1,19 +1,34 @@
 import { useState } from 'react';
+import { api } from '../services/api';
 
 export default function UrlInput({ onGenerateQuiz }) {
   const [url, setUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!url.trim()) return;
 
     setIsLoading(true);
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    onGenerateQuiz(url);
-    setIsLoading(false);
+    setError('');
+
+    try {
+      // Fetch article from backend
+      const articleData = await api.fetchArticle(url);
+      
+      // Generate quiz from article
+      const quizData = await api.generateQuiz(articleData.text, 5);
+      
+      // Pass quiz data to parent
+      onGenerateQuiz(quizData, url);
+    } catch (err) {
+      setError(err.message || 'Failed to generate quiz. Please try again.');
+      console.error('Error:', err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -33,7 +48,10 @@ export default function UrlInput({ onGenerateQuiz }) {
                 type="url"
                 id="url"
                 value={url}
-                onChange={(e) => setUrl(e.target.value)}
+                onChange={(e) => {
+                  setUrl(e.target.value);
+                  setError('');
+                }}
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
                 placeholder="https://example.com/article"
@@ -42,6 +60,11 @@ export default function UrlInput({ onGenerateQuiz }) {
               />
               <div className={`absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-green-600 via-lime-600 to-yellow-600 transform origin-left transition-transform duration-300 ${isFocused ? 'scale-x-100' : 'scale-x-0'}`}></div>
             </div>
+            {error && (
+              <div className="text-red-600 text-sm text-center bg-red-50 p-3 rounded-lg border border-red-200">
+                {error}
+              </div>
+            )}
           </div>
           
           <button
