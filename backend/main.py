@@ -93,6 +93,8 @@ class ArticleRequest(BaseModel):
 class ArticleResponse(BaseModel):
     text: str
     url: str
+    summary: str
+    word_count: int
 
 class QuizRequest(BaseModel):
     article_text: str
@@ -145,12 +147,28 @@ async def fetch_article(request: ArticleRequest):
         soup = BeautifulSoup(clean_html, "html.parser")
         text = " ".join(soup.get_text(separator="\n", strip=True).split())
         
+        # Calculate word count
+        word_count = len(text.split())
+        
+        # Generate summary (first 300 characters or 3 sentences)
+        sentences = text.split('. ')
+        summary = '. '.join(sentences[:3])
+        if len(summary) > 300:
+            summary = summary[:300] + "..."
+        elif not summary.endswith('.'):
+            summary += "..."
+        
         # Limit text length to avoid token limits
         max_chars = 6000
         if len(text) > max_chars:
             text = text[:max_chars] + "..."
         
-        return ArticleResponse(text=text, url=cleaned_url)
+        return ArticleResponse(
+            text=text, 
+            url=cleaned_url,
+            summary=summary,
+            word_count=word_count
+        )
     
     except requests.exceptions.RequestException as e:
         raise HTTPException(
