@@ -38,7 +38,7 @@ export default function UrlInput({ onGenerateQuiz }) {
     setError('');
 
     try {
-      const quizData = await api.generateQuiz(articleData.text, numQuestions);
+      const quizData = await api.generateQuiz(articleData.content, numQuestions);
       onGenerateQuiz(quizData, url);
     } catch (err) {
       setError(err.message || 'Failed to generate quiz');
@@ -134,6 +134,22 @@ export default function UrlInput({ onGenerateQuiz }) {
                 <span className="bg-white px-3 py-1.5 rounded-full text-green-600 font-medium">
                   ✅ Article Loaded
                 </span>
+                {articleData.total_responses > 0 && (
+                  <span className="bg-blue-50 px-3 py-1.5 rounded-full text-blue-600 font-medium border border-blue-200">
+                    👥 {articleData.total_responses} {articleData.total_responses === 1 ? 'person has' : 'people have'} analyzed this
+                  </span>
+                )}
+                {articleData.credibility_score && (
+                  <span className={`px-3 py-1.5 rounded-full font-medium border ${
+                    articleData.credibility_score >= 70 
+                      ? 'bg-green-50 text-green-600 border-green-200' 
+                      : articleData.credibility_score >= 40
+                      ? 'bg-yellow-50 text-yellow-600 border-yellow-200'
+                      : 'bg-red-50 text-red-600 border-red-200'
+                  }`}>
+                    {articleData.credibility_score >= 70 ? '✅' : articleData.credibility_score >= 40 ? '⚠️' : '❌'} Credibility: {articleData.credibility_score.toFixed(0)}/100
+                  </span>
+                )}
               </div>
             </div>
 

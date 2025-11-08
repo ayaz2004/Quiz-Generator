@@ -51,6 +51,7 @@ export default function Quiz({ quizData, onReset }) {
         questions={quizData.questions}
         selectedAnswers={selectedAnswers}
         onReset={onReset}
+        quizData={quizData}
       />
     );
   }
