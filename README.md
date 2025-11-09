@@ -53,7 +53,7 @@ frontend/
 ### Prerequisites
 - Python 3.9+
 - Node.js 18+
-- Groq API Key ([Get it here](https://console.groq.com/))
+- Groq API Key 
 
 ### 1. Clone Repository
 ```bash
@@ -304,12 +304,6 @@ This is a crowd-sourced platform - your contributions matter!
 3. Commit changes
 4. Push to branch
 5. Create Pull Request
-
----
-
-## 📝 License
-
-MIT License - feel free to use and modify!
 
 ---
 

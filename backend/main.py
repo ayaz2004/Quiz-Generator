@@ -1,8 +1,3 @@
-"""
-FastAPI Backend for Crowd-Sourced Misinformation Detection Quiz Generator
-Integrates article fetching, quiz generation, and database storage
-"""
-
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session

@@ -88,6 +88,84 @@ export const api = {
     }
   },
 
+  // Get all articles (for browsing)
+  getAllArticles: async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/articles`);
+      if (!response.ok) return [];
+      return response.json();
+    } catch (error) {
+      console.error('Error fetching articles:', error);
+      return [];
+    }
+  },
+
+  // Get user statistics
+  getUserStats: async (userId = 1) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/users/${userId}/statistics`);
+      if (!response.ok) return null;
+      return response.json();
+    } catch (error) {
+      console.error('Error fetching user stats:', error);
+      return null;
+    }
+  },
+
+  // Get top flagged articles (analytics)
+  getTopFlaggedArticles: async (limit = 10) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/analytics/top-flagged?limit=${limit}`);
+      if (!response.ok) return [];
+      return response.json();
+    } catch (error) {
+      console.error('Error fetching top flagged:', error);
+      return [];
+    }
+  },
+
+  // Get most credible articles (analytics)
+  getMostCredibleArticles: async (limit = 10) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/analytics/most-credible?limit=${limit}`);
+      if (!response.ok) return [];
+      return response.json();
+    } catch (error) {
+      console.error('Error fetching most credible:', error);
+      return [];
+    }
+  },
+
+  // Get article flags
+  getArticleFlags: async (articleId) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/articles/${articleId}/flags`);
+      if (!response.ok) return [];
+      return response.json();
+    } catch (error) {
+      console.error('Error fetching flags:', error);
+      return [];
+    }
+  },
+
+  // Create misinformation flag
+  createFlag: async (flagData) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/flags`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(flagData),
+      });
+      if (!response.ok) return null;
+      return response.json();
+    } catch (error) {
+      console.error('Error creating flag:', error);
+      return null;
+    }
+  },
+
   // Health check
   healthCheck: async () => {
     const response = await fetch(`${API_BASE_URL}/api/health`);
