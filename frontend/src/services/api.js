@@ -1,6 +1,83 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 export const api = {
+  // Authentication APIs
+  register: async (email, username, password) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          email: email,
+          username: username,
+          password: password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return {
+          success: false,
+          message: data.detail || 'Registration failed',
+        };
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Registration error:', error);
+      return {
+        success: false,
+        message: 'Network error. Please try again.',
+      };
+    }
+  },
+
+  login: async (emailOrUsername, password) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          email: emailOrUsername,
+          password: password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return {
+          success: false,
+          message: data.detail || 'Login failed',
+        };
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Login error:', error);
+      return {
+        success: false,
+        message: 'Network error. Please try again.',
+      };
+    }
+  },
+
+  verifyUser: async (userId) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/verify/${userId}`);
+      if (!response.ok) return null;
+      return response.json();
+    } catch (error) {
+      console.error('Verification error:', error);
+      return null;
+    }
+  },
+
   // Fetch article from URL
   fetchArticle: async (url) => {
     const response = await fetch(`${API_BASE_URL}/api/fetch-article`, {
@@ -109,6 +186,54 @@ export const api = {
     } catch (error) {
       console.error('Error fetching user stats:', error);
       return null;
+    }
+  },
+
+  // Get user dashboard data
+  getUserDashboard: async (userId) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/users/${userId}/dashboard`);
+      if (!response.ok) return null;
+      return response.json();
+    } catch (error) {
+      console.error('Error fetching dashboard:', error);
+      return null;
+    }
+  },
+
+  // Get user achievements
+  getUserAchievements: async (userId) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/users/${userId}/achievements`);
+      if (!response.ok) return null;
+      return response.json();
+    } catch (error) {
+      console.error('Error fetching achievements:', error);
+      return null;
+    }
+  },
+
+  // Get leaderboard
+  getLeaderboard: async (limit = 10) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/leaderboard?limit=${limit}`);
+      if (!response.ok) return [];
+      return response.json();
+    } catch (error) {
+      console.error('Error fetching leaderboard:', error);
+      return [];
+    }
+  },
+
+  // Get quiz history
+  getQuizHistory: async (userId, limit = 20) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/users/${userId}/quiz-history?limit=${limit}`);
+      if (!response.ok) return [];
+      return response.json();
+    } catch (error) {
+      console.error('Error fetching quiz history:', error);
+      return [];
     }
   },
 

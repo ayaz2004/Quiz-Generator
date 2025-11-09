@@ -97,9 +97,17 @@ export default function Analytics() {
                       {index + 1}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-gray-800 text-sm mb-1 truncate">
+                      <h4 className="font-semibold text-gray-800 text-sm mb-1 line-clamp-2">
                         {article.title || 'Untitled Article'}
                       </h4>
+                      <a
+                        href={article.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-blue-600 hover:underline block truncate mb-2"
+                      >
+                        🔗 {article.url}
+                      </a>
                       <div className="flex flex-wrap gap-2 text-xs">
                         <span className="bg-red-100 text-red-700 px-2 py-1 rounded-full font-medium">
                           🚩 {article.flagged_as_misinformation} flags
@@ -136,9 +144,17 @@ export default function Analytics() {
                       {index + 1}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-gray-800 text-sm mb-1 truncate">
+                      <h4 className="font-semibold text-gray-800 text-sm mb-1 line-clamp-2">
                         {article.title || 'Untitled Article'}
                       </h4>
+                      <a
+                        href={article.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-blue-600 hover:underline block truncate mb-2"
+                      >
+                        🔗 {article.url}
+                      </a>
                       <div className="flex flex-wrap gap-2 text-xs">
                         <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">
                           ✅ Score: {article.credibility_score.toFixed(0)}/100

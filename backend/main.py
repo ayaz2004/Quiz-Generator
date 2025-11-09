@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Form
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import List
@@ -47,8 +47,102 @@ app.add_middleware(
 
 
 # ============================================================================
+# AUTHENTICATION ENDPOINTS
+# ============================================================================
+
+@app.post("/api/auth/register")
+async def register_user(
+    email: str = Form(...),
+    username: str = Form(...),
+    password: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    """Register a new user"""
+    try:
+        # Check if user exists
+        existing_user = crud.get_user_by_email(db, email)
+        if existing_user:
+            raise HTTPException(status_code=400, detail="Email already registered")
+        
+        existing_username = crud.get_user_by_username(db, username)
+        if existing_username:
+            raise HTTPException(status_code=400, detail="Username already taken")
+        
+        # Create user
+        user = crud.create_authenticated_user(db, email, username, password)
+        
+        return {
+            "success": True,
+            "message": "User registered successfully",
+            "user": {
+                "id": user.id,
+                "email": user.email,
+                "username": user.username,
+                "is_authenticated": True
+            }
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        print(f"❌ Registration error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Registration failed")
+
+
+@app.post("/api/auth/login")
+async def login_user(
+    email: str = Form(...),
+    password: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    """Login user with email or username"""
+    try:
+        user = crud.authenticate_user(db, email, password)
+        
+        if not user:
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+        
+        return {
+            "success": True,
+            "message": "Login successful",
+            "user": {
+                "id": user.id,
+                "email": user.email,
+                "username": user.username,
+                "is_authenticated": True,
+                "total_quizzes": user.total_quizzes_taken,
+                "accuracy_rate": user.accuracy_rate
+            }
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Login error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Login failed")
+
+
+@app.get("/api/auth/verify/{user_id}")
+async def verify_user(user_id: int, db: Session = Depends(get_db)):
+    """Verify if user session is valid"""
+    user = crud.get_user_by_id(db, user_id)
+    
+    if not user or user.is_anonymous:
+        raise HTTPException(status_code=401, detail="Invalid session")
+    
+    return {
+        "success": True,
+        "user": {
+            "id": user.id,
+            "email": user.email,
+            "username": user.username,
+            "is_authenticated": True
+        }
+    }
+
+
+# ============================================================================
 # ARTICLE ENDPOINTS
 # ============================================================================
+
 
 @app.get("/")
 async def root():
@@ -362,6 +456,57 @@ async def get_most_credible_articles(limit: int = 10, db: Session = Depends(get_
              "total_responses": a.total_responses} for a in articles]
 
 
+# ============================================================================
+# USER DASHBOARD & ACHIEVEMENTS ENDPOINTS
+# ============================================================================
+
+@app.get("/api/users/{user_id}/dashboard")
+async def get_user_dashboard(user_id: int, db: Session = Depends(get_db)):
+    """Get comprehensive user dashboard statistics"""
+    stats = crud.get_user_statistics_detailed(db, user_id)
+    if not stats:
+        raise HTTPException(status_code=404, detail="User not found")
+    return stats
+
+
+@app.get("/api/users/{user_id}/quiz-history")
+async def get_quiz_history(user_id: int, limit: int = 50, db: Session = Depends(get_db)):
+    """Get user's quiz history with details"""
+    responses = crud.get_user_quiz_history(db, user_id, limit)
+    
+    history = []
+    for response in responses:
+        quiz = crud.get_quiz_by_id(db, response.quiz_id)
+        article = crud.get_article_by_id(db, quiz.article_id) if quiz else None
+        
+        history.append({
+            "response_id": response.id,
+            "quiz_id": response.quiz_id,
+            "completed_at": response.completed_at.isoformat(),
+            "score_percentage": response.score_percentage,
+            "correct_answers": response.correct_answers,
+            "total_questions": response.total_questions,
+            "credibility_rating": response.user_credibility_rating,
+            "article_url": article.url if article else None,
+            "article_title": article.title if article else None,
+        })
+    
+    return history
+
+
+@app.get("/api/users/{user_id}/achievements")
+async def get_achievements(user_id: int, db: Session = Depends(get_db)):
+    """Get user achievements and badges"""
+    achievements = crud.get_user_achievements(db, user_id)
+    return achievements
+
+
+@app.get("/api/leaderboard")
+async def get_leaderboard(limit: int = 10, db: Session = Depends(get_db)):
+    """Get leaderboard of top users"""
+    return crud.get_leaderboard(db, limit)
+
+
 @app.get("/api/health")
 async def health_check():
     """Detailed health check"""
@@ -382,3 +527,4 @@ async def health_check():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+

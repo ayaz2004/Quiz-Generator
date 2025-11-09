@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '../services/api';
 
-export default function QuizResults({ score, total, questions, selectedAnswers, onReset, quizData }) {
+export default function QuizResults({ score, total, questions, selectedAnswers, onReset, quizData, isAuthenticated, userId }) {
   const [articleStats, setArticleStats] = useState(null);
   const [credibilityRating, setCredibilityRating] = useState(null);
   const [showRatingForm, setShowRatingForm] = useState(false);
@@ -11,9 +11,9 @@ export default function QuizResults({ score, total, questions, selectedAnswers, 
   const percentage = Math.round((score / total) * 100);
 
   useEffect(() => {
-    // Auto-save quiz results to database
+    // Only save results if user is authenticated
     const saveResults = async () => {
-      if (!quizData?.quiz_id) return;
+      if (!quizData?.quiz_id || !isAuthenticated || !userId) return;
 
       const answers = questions.map(q => ({
         question_id: q.id,
@@ -37,7 +37,7 @@ export default function QuizResults({ score, total, questions, selectedAnswers, 
 
     saveResults();
     fetchStats();
-  }, [quizData, questions, selectedAnswers]);
+  }, [quizData, questions, selectedAnswers, isAuthenticated, userId]);
 
   const handleRateArticle = async () => {
     if (!quizData?.quiz_id || isSubmitting) return;
@@ -156,7 +156,32 @@ export default function QuizResults({ score, total, questions, selectedAnswers, 
       </div>
 
       {/* Rate Article Section - Enhanced Design */}
-      {!showRatingForm ? (
+      {!isAuthenticated ? (
+        // Guest Mode - Prompt to Sign In
+        <div className="bg-gradient-to-br from-yellow-50 to-orange-50 backdrop-blur-lg rounded-3xl shadow-lg p-6 mb-8 border border-yellow-200 animate-fade-in">
+          <div className="text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-full mb-4 shadow-lg">
+              <span className="text-3xl">🔒</span>
+            </div>
+            <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">
+              Sign In to Rate Article Credibility
+            </h3>
+            <p className="text-sm sm:text-base text-gray-600 mb-4 max-w-md mx-auto">
+              Only registered users can rate articles to ensure data quality for our misinformation detection model. Guest mode allows you to practice, but your responses won't be saved.
+            </p>
+            <button
+              onClick={() => {
+                localStorage.clear();
+                window.location.reload();
+              }}
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 px-6 rounded-xl font-semibold text-sm sm:text-base hover:shadow-xl hover:scale-105 transition-all duration-300 inline-flex items-center gap-2"
+            >
+              <span className="text-xl">🔐</span>
+              <span>Sign In to Continue</span>
+            </button>
+          </div>
+        </div>
+      ) : !showRatingForm ? (
         <div className="bg-gradient-to-br from-blue-50 to-indigo-50 backdrop-blur-lg rounded-3xl shadow-lg p-6 mb-8 border border-blue-200 animate-fade-in">
           <div className="text-center">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full mb-4 shadow-lg">

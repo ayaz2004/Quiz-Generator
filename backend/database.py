@@ -125,13 +125,18 @@ class Question(Base):
 
 class User(Base):
     """
-    Stores user information (optional - for crowd-sourcing)
+    Stores user information for authentication and crowd-sourcing
+    Supports both registered and anonymous users
     """
     __tablename__ = "users"
     
     id = Column(Integer, primary_key=True, index=True)
+    email = Column(String(255), unique=True, index=True, nullable=True)  # Null for anonymous
+    username = Column(String(100), unique=True, index=True, nullable=True)  # Null for anonymous
+    password_hash = Column(String(255), nullable=True)  # Null for anonymous
     user_identifier = Column(String(100), unique=True, index=True)  # Can be email, username, or anonymous ID
     is_anonymous = Column(Boolean, default=True)
+    is_active = Column(Boolean, default=True)
     
     # User statistics
     total_quizzes_taken = Column(Integer, default=0)

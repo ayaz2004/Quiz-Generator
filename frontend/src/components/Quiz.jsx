@@ -2,7 +2,7 @@ import { useState } from 'react';
 import QuizQuestion from './QuizQuestion';
 import QuizResults from './QuizResults';
 
-export default function Quiz({ quizData, onReset }) {
+export default function Quiz({ quizData, onReset, isAuthenticated, userId }) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [showResults, setShowResults] = useState(false);
@@ -52,6 +52,8 @@ export default function Quiz({ quizData, onReset }) {
         selectedAnswers={selectedAnswers}
         onReset={onReset}
         quizData={quizData}
+        isAuthenticated={isAuthenticated}
+        userId={userId}
       />
     );
   }
