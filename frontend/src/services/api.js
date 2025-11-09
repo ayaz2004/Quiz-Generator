@@ -119,7 +119,7 @@ export const api = {
   },
 
   // Submit quiz results (auto-save to database)
-  submitQuizResults: async (quizId, answers, credibilityRating = 3) => {
+  submitQuizResults: async (quizId, userId, answers, credibilityRating = 3) => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/submit-quiz`, {
         method: 'POST',
@@ -128,7 +128,7 @@ export const api = {
         },
         body: JSON.stringify({
           quiz_id: quizId,
-          user_id: 1, // Anonymous user
+          user_id: userId,
           answers: answers.map(a => ({
             question_id: a.question_id,
             selected_option: a.selected_option,

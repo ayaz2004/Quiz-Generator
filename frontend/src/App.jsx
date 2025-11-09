@@ -229,7 +229,9 @@ export default function App() {
           
           {currentView === 'analytics' && isAuthenticated && <Analytics />}
           
-          {currentView === 'browse' && isAuthenticated && <BrowseArticles />}
+          {currentView === 'browse' && isAuthenticated && user && (
+            <BrowseArticles userId={user.id} isAuthenticated={isAuthenticated} />
+          )}
         </main>
 
         {currentUrl && quizGenerated && currentView === 'quiz' && (

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '../services/api';
 
-export default function BrowseArticles() {
+export default function BrowseArticles({ userId, isAuthenticated }) {
   const [articles, setArticles] = useState([]);
   const [selectedArticle, setSelectedArticle] = useState(null);
   const [flags, setFlags] = useState([]);
@@ -33,9 +33,17 @@ export default function BrowseArticles() {
 
   const handleSubmitFlag = async (e) => {
     e.preventDefault();
+    
+    if (!isAuthenticated || !userId) {
+      alert('❌ Please sign in to flag articles.');
+      return;
+    }
+    
+    console.log('🚩 Submitting flag for article:', selectedArticle.id, 'by user:', userId);
+    
     const flagPayload = {
       article_id: selectedArticle.id,
-      user_id: 1, // Anonymous user
+      user_id: userId,
       flag_type: flagData.flag_type,
       severity: flagData.severity,
       reasoning: flagData.reasoning,
@@ -54,6 +62,7 @@ export default function BrowseArticles() {
       // Refresh flags
       const updatedFlags = await api.getArticleFlags(selectedArticle.id);
       setFlags(updatedFlags);
+      console.log('✅ Flag submitted successfully');
     } else {
       alert('❌ Failed to submit flag. Please try again.');
     }

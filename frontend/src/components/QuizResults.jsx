@@ -13,16 +13,21 @@ export default function QuizResults({ score, total, questions, selectedAnswers, 
   useEffect(() => {
     // Only save results if user is authenticated
     const saveResults = async () => {
-      if (!quizData?.quiz_id || !isAuthenticated || !userId) return;
+      if (!quizData?.quiz_id || !isAuthenticated || !userId) {
+        console.log('⚠️ Skipping quiz save - Guest mode or missing data');
+        return;
+      }
 
       const answers = questions.map(q => ({
         question_id: q.id,
         selected_option: selectedAnswers[q.id] || 0,
       }));
 
-      const result = await api.submitQuizResults(quizData.quiz_id, answers, 3);
+      console.log('💾 Saving quiz results for user:', userId);
+      const result = await api.submitQuizResults(quizData.quiz_id, userId, answers, 3);
       if (result) {
         setCredibilityRating(result.article_credibility_score);
+        console.log('✅ Quiz saved successfully');
       }
     };
 
@@ -40,7 +45,7 @@ export default function QuizResults({ score, total, questions, selectedAnswers, 
   }, [quizData, questions, selectedAnswers, isAuthenticated, userId]);
 
   const handleRateArticle = async () => {
-    if (!quizData?.quiz_id || isSubmitting) return;
+    if (!quizData?.quiz_id || isSubmitting || !isAuthenticated || !userId) return;
     
     setIsSubmitting(true);
     const answers = questions.map(q => ({
@@ -48,10 +53,12 @@ export default function QuizResults({ score, total, questions, selectedAnswers, 
       selected_option: selectedAnswers[q.id] || 0,
     }));
 
-    const result = await api.submitQuizResults(quizData.quiz_id, answers, userRating);
+    console.log('⭐ Submitting user rating:', userRating, 'for user:', userId);
+    const result = await api.submitQuizResults(quizData.quiz_id, userId, answers, userRating);
     if (result) {
       setCredibilityRating(result.article_credibility_score);
       setShowRatingForm(false);
+      console.log('✅ Rating submitted successfully');
     }
     setIsSubmitting(false);
   };

@@ -131,6 +131,11 @@ def get_article_by_id(db: Session, article_id: int) -> Optional[Article]:
     return db.query(Article).filter(Article.id == article_id).first()
 
 
+def get_all_articles(db: Session, limit: int = 100, offset: int = 0) -> List[Article]:
+    """Get all articles ordered by most recent"""
+    return db.query(Article).order_by(desc(Article.created_at)).limit(limit).offset(offset).all()
+
+
 def update_article_credibility(db: Session, article_id: int) -> Article:
     """
     Recalculate article credibility score based on user responses

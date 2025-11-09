@@ -221,6 +221,13 @@ async def fetch_article(request: ArticleRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Error processing article: {str(e)}")
 
 
+@app.get("/api/articles", response_model=List[ArticleResponse])
+async def get_all_articles(limit: int = 100, offset: int = 0, db: Session = Depends(get_db)):
+    """Get all articles ordered by most recent"""
+    articles = crud.get_all_articles(db, limit=limit, offset=offset)
+    return articles
+
+
 @app.get("/api/articles/{article_id}", response_model=ArticleResponse)
 async def get_article(article_id: int, db: Session = Depends(get_db)):
     """Get article by ID"""
