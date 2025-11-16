@@ -65,22 +65,17 @@ cd "Fake News"
 ```bash
 cd backend
 
-# Create virtual environment
 python -m venv venv
 
-# Activate (Windows)
 venv\Scripts\activate
 
-# Activate (Mac/Linux)
 source venv/bin/activate
 
-# Install dependencies
+
 pip install -r requirements.txt
 
-# Create .env file
 echo GROQ_API_KEY=your_groq_api_key_here > .env
 
-# Initialize database
 python database.py
 ```
 
@@ -88,10 +83,8 @@ python database.py
 ```bash
 cd frontend
 
-# Install dependencies
 npm install
 
-# Create .env file
 echo VITE_API_URL=http://localhost:8000 > .env
 ```
 
@@ -102,8 +95,7 @@ echo VITE_API_URL=http://localhost:8000 > .env
 ### Start Backend
 ```bash
 cd backend
-venv\Scripts\activate  # Windows
-# source venv/bin/activate  # Mac/Linux
+venv\Scripts\activate  
 python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
@@ -330,48 +322,24 @@ This is a crowd-sourced platform - your contributions matter!
 
 ### Backend Issues
 ```bash
-# Reinstall dependencies
 pip install --upgrade -r requirements.txt
 
-# Reset database
 python database.py
 
-# Check API key
 echo $GROQ_API_KEY
 ```
 
 ### Frontend Issues
 ```bash
-# Clear cache
+
 npm run dev -- --force
 
-# Reinstall
 rm -rf node_modules package-lock.json
 npm install
 ```
 
 ### Database Issues
 ```bash
-# Delete and recreate
 rm misinformation_detection.db
 python database.py
 ```
-
----
-
-## 📞 Support
-
-For issues or questions:
-- Check [DATABASE_DOCUMENTATION.md](backend/DATABASE_DOCUMENTATION.md)
-- Review API docs at `/docs`
-- Open GitHub issue
-
----
-
-## 🌟 Star History
-
-If you find this project useful, please consider giving it a star! ⭐
-
----
-
-**Built with ❤️ for fighting misinformation through community collaboration**
