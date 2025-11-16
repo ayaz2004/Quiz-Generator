@@ -62,7 +62,7 @@ export default function App() {
     setIsAuthenticated(false);
     setUser(null);
     setIsGuestMode(true);
-    setCheckingAuth(false); // Ensure we exit loading state
+    setCheckingAuth(false); 
   };
 
   const handleLogout = () => {
