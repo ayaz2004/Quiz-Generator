@@ -1,8 +1,3 @@
-"""
-LLM Service for Quiz Generation
-Handles all AI/LLM related functionality
-"""
-
 import json
 import re
 import os
@@ -11,7 +6,6 @@ from langchain_groq import ChatGroq
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
-# Load environment variables
 load_dotenv()
 
 
@@ -140,24 +134,19 @@ Generate EXACTLY {num_questions} questions, each with EXACTLY 4 options. Return 
             dict with questions array
         """
         
-        # Choose appropriate prompt
         prompt = self.misinformation_prompt if focus_on_misinformation else self.general_prompt
         
-        # Create chain
         chain = prompt | self.model | StrOutputParser()
         
-        # Limit article length to avoid token limits
         max_chars = 6000
         if len(article_text) > max_chars:
             article_text = article_text[:max_chars]
         
-        # Generate quiz
         raw_output = chain.invoke({
             "article_text": article_text,
             "num_questions": num_questions
         })
         
-        # Extract JSON from output
         json_match = re.search(r'\[.*\]', raw_output, re.DOTALL)
         if not json_match:
             raise ValueError("Could not extract valid JSON from LLM response")
@@ -165,7 +154,6 @@ Generate EXACTLY {num_questions} questions, each with EXACTLY 4 options. Return 
         json_str = json_match.group(0)
         questions = json.loads(json_str)
         
-        # Validate structure
         for q in questions:
             required_keys = ["id", "question", "options", "correctAnswer"]
             if not all(key in q for key in required_keys):
@@ -180,5 +168,4 @@ Generate EXACTLY {num_questions} questions, each with EXACTLY 4 options. Return 
         }
 
 
-# Initialize LLM service
 llm_service = QuizGeneratorLLM()

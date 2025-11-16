@@ -8,7 +8,6 @@ import requests
 from bs4 import BeautifulSoup
 from readability import Document
 
-# Import our modular components
 from database import init_db, get_db
 from schemas import (
     ArticleRequest, ArticleResponse, QuizRequest, QuizResponse,
@@ -19,13 +18,10 @@ from schemas import (
 import crud
 from llm_service import llm_service
 
-# Load environment variables
 load_dotenv()
 
-# Initialize database
 init_db()
 
-# Initialize FastAPI app
 app = FastAPI(
     title="Misinformation Detection API",
     description="Crowd-sourced misinformation detection through interactive quizzes",
@@ -46,10 +42,6 @@ app.add_middleware(
 )
 
 
-# ============================================================================
-# AUTHENTICATION ENDPOINTS
-# ============================================================================
-
 @app.post("/api/auth/register")
 async def register_user(
     email: str = Form(...),
@@ -57,9 +49,8 @@ async def register_user(
     password: str = Form(...),
     db: Session = Depends(get_db)
 ):
-    """Register a new user"""
     try:
-        # Check if user exists
+       
         existing_user = crud.get_user_by_email(db, email)
         if existing_user:
             raise HTTPException(status_code=400, detail="Email already registered")
@@ -139,11 +130,6 @@ async def verify_user(user_id: int, db: Session = Depends(get_db)):
     }
 
 
-# ============================================================================
-# ARTICLE ENDPOINTS
-# ============================================================================
-
-
 @app.get("/")
 async def root():
     """Health check endpoint"""
@@ -167,30 +153,24 @@ async def fetch_article(request: ArticleRequest, db: Session = Depends(get_db)):
     Returns existing article if already fetched
     """
     try:
-        # Check if article already exists
         existing_article = crud.get_article_by_url(db, request.url)
         if existing_article:
             return existing_article
         
-        # Fetch new article
         cleaned_url = request.url.strip()
         response = requests.get(cleaned_url, timeout=10)
         response.raise_for_status()
         html = response.text
         
-        # Extract content
         doc = Document(html)
         clean_html = doc.summary()
         soup = BeautifulSoup(clean_html, "html.parser")
         text = " ".join(soup.get_text(separator="\n", strip=True).split())
         
-        # Get title
         title = doc.title() or "Untitled Article"
-        
-        # Calculate word count
+
         word_count = len(text.split())
         
-        # Generate summary
         sentences = text.split('. ')
         summary = '. '.join(sentences[:3])
         if len(summary) > 300:
@@ -198,12 +178,10 @@ async def fetch_article(request: ArticleRequest, db: Session = Depends(get_db)):
         elif not summary.endswith('.'):
             summary += "..."
         
-        # Limit text length
         max_chars = 6000
         if len(text) > max_chars:
             text = text[:max_chars] + "..."
         
-        # Store in database
         article = crud.create_article(
             db=db,
             url=cleaned_url,
@@ -246,40 +224,31 @@ async def get_article_stats(article_id: int, db: Session = Depends(get_db)):
     return stats
 
 
-# ============================================================================
-# QUIZ ENDPOINTS
-# ============================================================================
-
 @app.post("/api/generate-quiz", response_model=QuizResponse)
 async def generate_quiz(request: QuizRequest, db: Session = Depends(get_db)):
     """
     Generate quiz from article text and store in database
     """
     try:
-        # Validate input
         if not request.article_text or len(request.article_text.strip()) < 100:
             raise HTTPException(status_code=400, detail="Article text too short")
         
         if request.num_questions < 1 or request.num_questions > 10:
             raise HTTPException(status_code=400, detail="Questions must be between 1-10")
         
-        # Find article in database (we need article_id)
-        # For now, we'll use the first article or create a temporary one
-        # In production, frontend should pass article_id
+       
         articles = db.query(crud.Article).all()
         if not articles:
             raise HTTPException(status_code=400, detail="No article found. Fetch article first.")
         
-        article = articles[-1]  # Get most recent article
-        
-        # Generate quiz using LLM
+        article = articles[-1] 
+    
         quiz_data = llm_service.generate_quiz(
             article_text=request.article_text,
             num_questions=request.num_questions,
             focus_on_misinformation=request.focus_on_misinformation
         )
-        
-        # Store quiz in database
+    
         quiz = crud.create_quiz(
             db=db,
             article_id=article.id,
@@ -287,10 +256,8 @@ async def generate_quiz(request: QuizRequest, db: Session = Depends(get_db)):
             focus_on_misinformation=request.focus_on_misinformation
         )
         
-        # Store questions
         crud.create_questions(db, quiz.id, quiz_data["questions"])
         
-        # Prepare response
         db.refresh(quiz)
         
         response_questions = []
@@ -353,10 +320,6 @@ async def get_quiz(quiz_id: int, db: Session = Depends(get_db)):
     }
 
 
-# ============================================================================
-# USER ENDPOINTS
-# ============================================================================
-
 @app.post("/api/users", response_model=UserResponse)
 async def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
     """Create or get user"""
@@ -373,27 +336,16 @@ async def get_user(user_id: int, db: Session = Depends(get_db)):
     return user
 
 
-# ============================================================================
-# QUIZ SUBMISSION & RESPONSE ENDPOINTS
-# ============================================================================
-
 @app.post("/api/submit-quiz", response_model=QuizResultResponse)
 async def submit_quiz(submission: QuizSubmission, db: Session = Depends(get_db)):
-    """
-    Submit quiz answers and credibility assessment
-    This is the core endpoint for crowd-sourced misinformation detection
-    """
     try:
         print(f"📥 Received quiz submission: quiz_id={submission.quiz_id}, user_id={submission.user_id}")
         
-        # Create user response and calculate score
         user_response = crud.create_user_response(db, submission)
         print(f"✅ Created user response: {user_response.id}")
         
-        # Get updated article credibility
         article = crud.get_article_by_id(db, user_response.article_id)
         
-        # Determine community consensus
         if article.credibility_score >= 70:
             consensus = "likely_credible"
         elif article.credibility_score >= 40:
@@ -421,14 +373,8 @@ async def submit_quiz(submission: QuizSubmission, db: Session = Depends(get_db))
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Error submitting quiz: {str(e)}")
 
-
-# ============================================================================
-# MISINFORMATION FLAG ENDPOINTS
-# ============================================================================
-
 @app.post("/api/flags", response_model=MisinformationFlagResponse)
 async def create_flag(flag_data: MisinformationFlagCreate, db: Session = Depends(get_db)):
-    """Create a misinformation flag"""
     try:
         flag = crud.create_misinformation_flag(db, flag_data)
         return flag
@@ -442,10 +388,6 @@ async def get_article_flags(article_id: int, db: Session = Depends(get_db)):
     flags = crud.get_article_flags(db, article_id)
     return flags
 
-
-# ============================================================================
-# ANALYTICS ENDPOINTS
-# ============================================================================
 
 @app.get("/api/analytics/top-flagged")
 async def get_top_flagged_articles(limit: int = 10, db: Session = Depends(get_db)):
@@ -462,10 +404,6 @@ async def get_most_credible_articles(limit: int = 10, db: Session = Depends(get_
     return [{"id": a.id, "url": a.url, "credibility_score": a.credibility_score,
              "total_responses": a.total_responses} for a in articles]
 
-
-# ============================================================================
-# USER DASHBOARD & ACHIEVEMENTS ENDPOINTS
-# ============================================================================
 
 @app.get("/api/users/{user_id}/dashboard")
 async def get_user_dashboard(user_id: int, db: Session = Depends(get_db)):

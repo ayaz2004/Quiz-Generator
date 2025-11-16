@@ -1,16 +1,7 @@
-"""
-Pydantic Schemas for API Request/Response Validation
-Separate from database models for clean separation of concerns
-"""
-
 from pydantic import BaseModel, HttpUrl, Field, validator
 from typing import List, Optional
 from datetime import datetime
 
-
-# ============================================================================
-# ARTICLE SCHEMAS
-# ============================================================================
 
 class ArticleRequest(BaseModel):
     url: str = Field(..., description="URL of the article to fetch")
@@ -31,12 +22,8 @@ class ArticleResponse(BaseModel):
     created_at: datetime
 
     class Config:
-        from_attributes = True  # Enables ORM mode for SQLAlchemy models
+        from_attributes = True 
 
-
-# ============================================================================
-# QUIZ SCHEMAS
-# ============================================================================
 
 class QuizOption(BaseModel):
     id: int = Field(..., ge=1, le=4, description="Option ID (1-4)")
@@ -74,10 +61,6 @@ class QuizResponse(BaseModel):
         from_attributes = True
 
 
-# ============================================================================
-# USER SCHEMAS
-# ============================================================================
-
 class UserCreate(BaseModel):
     user_identifier: Optional[str] = Field(None, description="Email, username, or leave empty for anonymous")
     is_anonymous: bool = Field(default=True)
@@ -96,10 +79,6 @@ class UserResponse(BaseModel):
         from_attributes = True
 
 
-# ============================================================================
-# USER ANSWER & RESPONSE SCHEMAS
-# ============================================================================
-
 class AnswerSubmission(BaseModel):
     question_id: int
     selected_option: int = Field(..., ge=1, le=4)
@@ -111,7 +90,6 @@ class QuizSubmission(BaseModel):
     user_id: int
     answers: List[AnswerSubmission]
     
-    # Misinformation assessment
     user_credibility_rating: int = Field(..., ge=1, le=5, description="1=Fake, 5=Credible")
     user_flagged_as_misinformation: bool = Field(default=False)
     user_confidence_level: int = Field(..., ge=1, le=5, description="How confident are you?")
@@ -128,15 +106,12 @@ class QuizResultResponse(BaseModel):
     score_percentage: float
     user_credibility_rating: int
     article_credibility_score: float
-    community_consensus: str  # "likely_fake", "possibly_misleading", "likely_credible"
+    community_consensus: str 
     
     class Config:
         from_attributes = True
 
 
-# ============================================================================
-# MISINFORMATION FLAG SCHEMAS
-# ============================================================================
 
 class MisinformationFlagCreate(BaseModel):
     article_id: int
@@ -161,10 +136,6 @@ class MisinformationFlagResponse(BaseModel):
         from_attributes = True
 
 
-# ============================================================================
-# ANALYTICS & STATISTICS SCHEMAS
-# ============================================================================
-
 class ArticleStatistics(BaseModel):
     article_id: int
     url: str
@@ -173,7 +144,7 @@ class ArticleStatistics(BaseModel):
     avg_user_confidence: float
     misinformation_flags: int
     credible_flags: int
-    consensus: str  # "high_credibility", "disputed", "likely_misinformation"
+    consensus: str  
     
     class Config:
         from_attributes = True
@@ -184,7 +155,7 @@ class UserStatistics(BaseModel):
     total_quizzes: int
     average_score: float
     total_flags_submitted: int
-    contribution_level: str  # "beginner", "intermediate", "expert"
+    contribution_level: str 
     
     class Config:
         from_attributes = True
