@@ -451,6 +451,9 @@ def get_user_statistics_detailed(db: Session, user_id: int) -> dict:
             "streak_days": 0
         }
     
+    # Initialize quizzes_by_day dictionary
+    quizzes_by_day = {}
+    
     total_correct = sum(r.correct_answers for r in responses)
     total_questions = sum(r.total_questions for r in responses)
     avg_score = sum(r.score_percentage for r in responses) / len(responses)

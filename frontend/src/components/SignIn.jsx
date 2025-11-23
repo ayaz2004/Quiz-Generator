@@ -194,12 +194,6 @@ export default function SignIn({ onAuthSuccess, onSwitchToSignUp, onSkipAuth }) 
             </p>
           </div>
         </motion.div>
-
-        {/* Footer */}
-        <p className="text-center text-gray-500 text-sm mt-6 flex items-center justify-center gap-2">
-          <span className="text-xl">❤️</span>
-          Built for fighting misinformation together
-        </p>
       </motion.div>
     </div>
   );

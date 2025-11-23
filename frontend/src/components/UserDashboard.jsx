@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { api } from '../services/api';
 
 const UserDashboard = ({ userId }) => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -8,57 +9,38 @@ const UserDashboard = ({ userId }) => {
   const [achievements, setAchievements] = useState([]);
   const [leaderboard, setLeaderboard] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetchDashboardData();
-    fetchQuizHistory();
-    fetchAchievements();
-    fetchLeaderboard();
+    fetchAllData();
   }, [userId]);
 
-  const fetchDashboardData = async () => {
+  const fetchAllData = async () => {
     try {
-      const response = await fetch(`http://localhost:8000/api/users/${userId}/dashboard`);
-      const data = await response.json();
-      setDashboardData(data);
+      setLoading(true);
+      setError(null);
+
+      // Fetch all data in parallel using centralized API service
+      const [dashboard, history, achievementsData, leaderboardData] = await Promise.all([
+        api.getUserDashboard(userId),
+        api.getQuizHistory(userId, 20),
+        api.getUserAchievements(userId),
+        api.getLeaderboard(10)
+      ]);
+
+      setDashboardData(dashboard);
+      setQuizHistory(history || []);
+      setAchievements(achievementsData || []);
+      setLeaderboard(leaderboardData || []);
     } catch (error) {
-      console.error('Error fetching dashboard:', error);
+      console.error('Error fetching dashboard data:', error);
+      setError('Failed to load dashboard data. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchQuizHistory = async () => {
-    try {
-      const response = await fetch(`http://localhost:8000/api/users/${userId}/quiz-history?limit=20`);
-      const data = await response.json();
-      setQuizHistory(data);
-    } catch (error) {
-      console.error('Error fetching quiz history:', error);
-    }
-  };
-
-  const fetchAchievements = async () => {
-    try {
-      const response = await fetch(`http://localhost:8000/api/users/${userId}/achievements`);
-      const data = await response.json();
-      setAchievements(data);
-    } catch (error) {
-      console.error('Error fetching achievements:', error);
-    }
-  };
-
-  const fetchLeaderboard = async () => {
-    try {
-      const response = await fetch(`http://localhost:8000/api/leaderboard?limit=10`);
-      const data = await response.json();
-      setLeaderboard(data);
-    } catch (error) {
-      console.error('Error fetching leaderboard:', error);
-    }
-  };
-
-  if (loading || !dashboardData) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[70vh] w-full">
         <motion.div
@@ -70,11 +52,39 @@ const UserDashboard = ({ userId }) => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[70vh] w-full px-4">
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-6 sm:p-8 text-center max-w-md w-full">
+          <span className="text-4xl sm:text-5xl mb-4 block">⚠️</span>
+          <p className="text-red-600 font-medium mb-4 text-sm sm:text-base">{error}</p>
+          <button
+            onClick={fetchAllData}
+            className="bg-gradient-to-r from-green-500 to-lime-500 text-white px-6 py-2 rounded-xl font-semibold hover:shadow-lg transition-all text-sm sm:text-base"
+          >
+            🔄 Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!dashboardData) {
+    return (
+      <div className="flex items-center justify-center min-h-[70vh] w-full px-4">
+        <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-6 sm:p-8 text-center max-w-md w-full">
+          <span className="text-4xl sm:text-5xl mb-4 block">📊</span>
+          <p className="text-gray-600 font-medium text-sm sm:text-base">No dashboard data available</p>
+        </div>
+      </div>
+    );
+  }
+
   const tabs = [
-    { id: 'overview', label: 'Overview', icon: '📊', shortLabel: 'Stats' },
-    { id: 'history', label: 'Quiz History', icon: '📚', shortLabel: 'History' },
-    { id: 'achievements', label: 'Achievements', icon: '🏆', shortLabel: 'Badges' },
-    { id: 'leaderboard', label: 'Leaderboard', icon: '👑', shortLabel: 'Ranks' },
+    { id: 'overview', label: 'Overview', icon: '📊'},
+    { id: 'history', label: 'Quiz History', icon: '📚'},
+    { id: 'achievements', label: 'Achievements', icon: '🏆'},
+    { id: 'leaderboard', label: 'Leaderboard', icon: '👑'},
   ];
 
   return (
